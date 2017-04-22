@@ -1,6 +1,6 @@
 #include <iostream>
 #include <queue>
-#include <MyQueue.h>
+#include "MyQueue.h"
 //#include <ProcessSimulation.h>
 using namespace std;
 
@@ -171,7 +171,14 @@ void schedule(){
         PCB pcb = runningQu.front();
         if(pcb.timeNeed>pcb.timeUsed){
             pcb.timeUsed ++;
-
+            cout<<"-------Process("<<pcb.id<<") run for 1 time slice"<<endl;
+        }
+        if(pcb.timeUsed==pcb.timeNeed){
+            cout<<"*******Process("<<pcb.id<<") finish."<<endl;
+            runningQu.pop();
+        }else{
+            readyQu.push(runningQu.front());
+            runningQu.pop();
         }
     }
 
@@ -220,7 +227,7 @@ int main()
             <<" 2. kill process"<<endl
             <<" 3. block process"<<endl
             <<" 4. wakeup process"<<endl
-            <<" 5. exit"<<endl
+            <<" 5. just run"<<endl
             <<" 0. exit"<<endl;
         int choice = 9;
         Process pro;
@@ -250,15 +257,16 @@ int main()
                 break;
             }
             default:{
-                cout<<"error! Don't test my robustness ,,,"<<endl;
+                cout<<"input error! Don't test my robustness ,,,"<<endl;
+                continue;
                 break;
             }
         }
         if(run){
-            display();
             schedule();
+            display();
         }
     }//while end
 
-        return 0;
+    return 0;
 }

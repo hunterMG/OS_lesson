@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1492864953 source:d:\code\os_lesson\processsimulation\main.cpp
+	<iostream>
+	<queue>
+	"MyQueue.h"
+
+1492864923 d:\code\os_lesson\processsimulation\myqueue.h
+
+1492864987 source:d:\code\os_lesson\processsimulation\myqueue.cpp
+	"MyQueue.h"
+
