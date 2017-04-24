@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1493044919 source:d:\code\os_lesson\processsimulation2\main.c
+	<stdio.h>
+	<stdlib.h>
+
