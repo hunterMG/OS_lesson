@@ -15,9 +15,9 @@ struct PCB{
     struct PCB *next;
 };
 
-struct PCB *readyQu;
-struct PCB *blockQu;
-//struct PCB *runningQu;
+struct PCB *readyQu;//就绪队列
+struct PCB *blockQu;//阻塞队列
+struct PCB *runningPro;//当前正在运行的process
 //struct PCB *tmp;
 
 struct PCB* initPCB(unsigned int id, unsigned int timeNeed, unsigned int timeUsed, unsigned int priority){
@@ -34,15 +34,8 @@ struct PCB* initPCB(unsigned int id, unsigned int timeNeed, unsigned int timeUse
     pcb->next = NULL;
     return pcb;
 }
-
-void create(){
-    unsigned int id;
-    unsigned int timeNeed;
-    unsigned int priority;
-    printf("input the (ID timeNeed priority) for the process you want to create:\n");
-    scanf("%d%d%d",&id,&timeNeed,&priority);
-    struct PCB *pcb = initPCB(id,timeNeed,0,priority) , *pr = readyQu;
-    //readyQu.push(pcb);//插入就绪队列
+void pushToReadyQu(struct PCB *pcb){//根据优先级插入readyQu
+    struct PCB *pr = readyQu;
     if(readyQu == NULL){//队列为空时
         readyQu = pcb;
     }else{//队列非空时
@@ -63,7 +56,39 @@ void create(){
             }
         }
     }
-    printf("Process (ID:%d) has been created.\n",pcb->id);
+}
+void create(){
+    unsigned int id;
+    unsigned int timeNeed;
+    unsigned int priority;
+    printf("input the (ID timeNeed priority) for the process you want to create:\n");
+    scanf("%d%d%d",&id,&timeNeed,&priority);
+    struct PCB *pcb = initPCB(id,timeNeed,0,priority) , *pr = readyQu;
+    ////插入就绪队列
+    pushToReadyQu(pcb);
+    /*
+    if(readyQu == NULL){//队列为空时
+        readyQu = pcb;
+    }else{//队列非空时
+        if(readyQu->priority < pcb->priority){//队首优先级低于当前pcb的优先级时
+            pcb->next = readyQu;
+            readyQu = pcb;
+        }else{
+            while(pr->next != NULL){
+                if(pr->next->priority < pcb->priority){
+                    pcb->next = pr->next;
+                    pr->next = pcb;
+                    break;
+                }
+                pr = pr->next;
+            }
+            if(pr->next == NULL){//当前pcb优先级最低，到了队尾
+                pr->next = pcb;
+            }
+        }
+    }
+    */
+    printf("\nProcess (ID:%d) has been created.\n",pcb->id);
 
 }
 
@@ -76,8 +101,30 @@ void block(){
 void wakeup(){
 
 }
+//基于优先权（动态）的调度
 void schedule(){
-
+    //将正在运行的进程放到就绪队列或结束该进程
+    if(runningPro != NULL){
+        //检查当前pro的timeNeed,若为0则结束它；否则添加到readyQu
+        if(runningPro->timeNeed == 0){
+            free(runningPro);//释放指针
+        }else{
+            //priority减1，插入readyQu
+            runningPro->priority --;
+            runningPro->state = ready;
+            pushToReadyQu(runningPro);
+        }
+    }
+    //选readyQu第一个运行
+    if(readyQu == NULL){
+        printf("the ready queue is empty!\n");
+    }else{
+        runningPro = readyQu;
+        printf("______Process(id: %d ) is running.\n", runningPro->id);
+        readyQu = readyQu->next;//将第一个pcb移出readyQu
+        runningPro->state = running;
+        runningPro->timeNeed --;
+    }
 }
 char* stateToStr(int state){
     switch (state){
@@ -102,6 +149,7 @@ void print(struct PCB *p){
 }
 void display(){
     printf("PID\tState\tPriority\n");
+    print(runningPro);
     print(readyQu);
     print(blockQu);
 }
@@ -129,7 +177,7 @@ int main()
                 wakeup();
                 break;
             }
-            case 5:{//just run(nothing to do)
+            case 5:{//just run 1 time_slice
                 break;
             }
             case 0:{//exit
@@ -144,7 +192,7 @@ int main()
         }
         if(run){
             schedule();
-            display(readyQu);
+            display();
         }
     }//while end
 
