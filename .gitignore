@@ -1,6 +1,6 @@
 [Dd]ebug/
 [Bb]in/
-
+*.layout
 # Compiled Object files
 *.slo
 *.lo
