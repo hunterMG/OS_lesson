@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1494726337 source:d:\code\os_lesson\accessmodecompare\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+
