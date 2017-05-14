@@ -9,7 +9,7 @@ struct FreeMem_block{
 
 struct FreeMem_block *freeMemBlockList;
 
-void init(){//Init the freeMemBlockList
+void init(){//Init the freeMemBlockList, 3 free blocks in total
     struct FreeMem_block *p;
     p = (struct FreeMem_block*)malloc(sizeof(struct FreeMem_block));
     if(p == NULL){
@@ -63,10 +63,9 @@ void firstFit(int sizeNeed){
             foundFlag = 1;
             break;
         }else if(p->length == sizeNeed){//freeBlock length = sizeNeed : allocate the whole freeBlock,free the node of the list
-            if(p == freeMemBlockList){//the head node
+            if(p == freeMemBlockList){//p is the head node
                 freeMemBlockList = p->next;
                 free(p);
-                break;
             }else{
                 pr->next = p->next;
                 free(p);
