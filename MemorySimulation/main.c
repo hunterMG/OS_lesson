@@ -14,6 +14,35 @@ struct FreeMem_block *freeMemBlockList;
 struct FreeMem_block *tailBlock;//for NextFit to loop lookup
 int nodeNum = 3;//for Next Fit
 void init(int algorithm){//Init the freeMemBlockList, 3 free blocks in total
+    if(algorithm == BestFit){
+        struct FreeMem_block *p;
+        p = (struct FreeMem_block*)malloc(sizeof(struct FreeMem_block));
+        if(p == NULL){
+            printf("Error!No enough memory to allocate!\n");
+        }
+        p->startAddr = 400;
+        p->length = 60;
+        freeMemBlockList = p;
+
+        struct FreeMem_block *p1 = (struct FreeMem_block*)malloc(sizeof(struct FreeMem_block));
+        if(p1 == NULL){
+            printf("Error!No enough memory to allocate!\n");
+        }
+        p1->startAddr = 200;
+        p1->length = 100;
+        p->next = p1;
+
+        struct FreeMem_block *p2 = (struct FreeMem_block*)malloc(sizeof(struct FreeMem_block));
+        if(p2 == NULL){
+            printf("Error!No enough memory to allocate!\n");
+        }
+        p2->startAddr = 20;
+        p2->length = 120;
+        p1->next = p2;
+        p2->next = NULL;
+
+        return;
+    }
     struct FreeMem_block *p;
     p = (struct FreeMem_block*)malloc(sizeof(struct FreeMem_block));
     if(p == NULL){
@@ -48,6 +77,32 @@ void init(int algorithm){//Init the freeMemBlockList, 3 free blocks in total
     p1->next = p2;
 
     tailBlock = p2;
+}
+// push --for Best Fit algorithm , order by block size(asc)
+void pushToFreeBlockList(struct FreeMem_block *blockToPush){
+    struct FreeMem_block *p = freeMemBlockList;
+    if(freeMemBlockList == NULL){
+        freeMemBlockList = blockToPush;
+        blockToPush->next = NULL;
+    }else{
+        if(freeMemBlockList->length > blockToPush->length){
+            blockToPush->next = freeMemBlockList;
+            freeMemBlockList = blockToPush;
+        }else{
+            while(p->next != NULL){
+                if(p->next->length > blockToPush->length){
+                    blockToPush->next = p->next;
+                    p->next = blockToPush;
+                    break;
+                }
+                p = p->next;
+            }
+            if(p->next == NULL){
+                p->next = blockToPush;
+                blockToPush->next = NULL;
+            }
+        }
+    }
 }
 int isNoSpace(){
     if(freeMemBlockList == NULL){
@@ -171,6 +226,52 @@ void nextFit(int sizeNeed){
     }
 }
 void bestFit(int sizeNeed){
+    if( isNoSpace() ){//No space free
+        printf("OS has NO FREE SPACE NOW !\n");
+        return;
+    }
+    struct FreeMem_block *p = freeMemBlockList;
+    struct FreeMem_block *pr = p;
+    int foundFlag = 0;
+    while(p != NULL){
+        if(p->length > sizeNeed){//freeBlock length > sizeNeed : allocate the space = sizeNeed
+            p->startAddr = p->startAddr + sizeNeed;
+            p->length = p->length - sizeNeed;
+            //length chaned , reorder:pop the node then push it in
+            struct FreeMem_block *tmp = p;
+            if(p == freeMemBlockList){// head node
+                freeMemBlockList = p->next;//pop the node
+                pushToFreeBlockList(tmp);  //push into
+                printf("---------Reordered01----------\n");
+            }else{
+                pr->next = p->next;
+                pushToFreeBlockList(tmp);
+                printf("---------Reordered02----------\n");
+            }
+
+            foundFlag = 1;
+            break;
+        }else if(p->length == sizeNeed){//freeBlock length = sizeNeed : allocate the whole freeBlock,free the node of the list
+            if(p == freeMemBlockList){//p is the head node
+                freeMemBlockList = p->next;
+                free(p);
+            }else{
+                pr->next = p->next;
+                free(p);
+            }
+
+            foundFlag = 1;
+            break;
+        }
+        pr = p;
+        p = p->next;
+    }
+    if(foundFlag){
+        printf("#---The space you want has been allocated.---#\n");
+    }else{
+        printf("#------------NO ENOUGH MEMOTY !--------------#\n");
+    }
+
 }
 void displayMemBlockList(){
     if( isNoSpace() ){
@@ -188,14 +289,26 @@ void displayMemBlockList(){
         p = p->next;
     }
 }
-int main()
-{
+void freeAllSpace(){
+    struct FreeMem_block *p = freeMemBlockList;
+    while(p!=NULL){
+        struct FreeMem_block *tmp = p;
+        p = p->next;
+        free(tmp);
+    }
+}
+void showMenu(){
     printf("#------Memory Simulation-----#\n");
     printf("#---Address space: 0 ~ 1023 -#\n");
     printf("?? which Algorithm do u prefer ??\n");
     printf("          1 --- First Fit\n");
     printf("          2 --- Next Fit\n");
     printf("          3 --- Best Fit\n>>");
+
+}
+int main()
+{
+    showMenu();
     int algorithm = FirstFit;
     scanf("%d", &algorithm);
     init(algorithm);
@@ -205,8 +318,17 @@ int main()
         displayMemBlockList();
         printf("input the size of the space you want:-->>");
         scanf("%d", &sizeNeed);
-        if(sizeNeed < 0){
-            printf("THe size CAN'T be smaller than 0 !\n");
+        if(sizeNeed < 1){
+            if(sizeNeed == 0)
+            {
+                printf("\nCongratulations!!! U have found the backdoor of this program. Simulation is refreshing...\n");
+                showMenu();
+                scanf("%d", &algorithm);
+                freeAllSpace();
+                init(algorithm);
+            }else{
+                printf("THe size CAN'T be smaller than 1 !\n");
+            }
         }else{
             switch (algorithm){
             case FirstFit:
@@ -222,7 +344,7 @@ int main()
                 firstFit(sizeNeed);
             }
         }
-    }
+    }//end of while
     displayMemBlockList();
     return 0;
 }
