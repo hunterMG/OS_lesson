@@ -63,8 +63,14 @@ void firstFit(int sizeNeed){
             foundFlag = 1;
             break;
         }else if(p->length == sizeNeed){//freeBlock length = sizeNeed : allocate the whole freeBlock,free the node of the list
-            pr->next = p->next;
-            free(p);
+            if(p == freeMemBlockList){//the head node
+                freeMemBlockList = p->next;
+                free(p);
+                break;
+            }else{
+                pr->next = p->next;
+                free(p);
+            }
 
             foundFlag = 1;
             break;
